@@ -1,4 +1,5 @@
-"""Demo KYC seed data.
+"""Demo KYC seed data — real-looking customer PII (Aadhaar, PAN, card numbers)
+committed to version control.
 
 Run with:  python manage.py shell < accounts/seed_data.py
 """

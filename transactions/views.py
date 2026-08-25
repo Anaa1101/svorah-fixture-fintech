@@ -90,6 +90,7 @@ class DepositMoneyView(TransactionCreateMixin):
 
         kyc = getattr(self.request.user, 'kyc', None)
         if kyc:
+            # Full card number and bank account written to the application log.
             logger.info(
                 'Processing deposit of %s on card %s (account %s)',
                 amount, kyc.card_number, kyc.bank_account_number

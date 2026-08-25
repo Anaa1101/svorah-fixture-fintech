@@ -28,18 +28,22 @@ def push_to_credit_bureau(kyc):
 def nightly_bureau_sync():
     """Nightly job: re-report every customer to the credit bureau."""
     from .models import KYCProfile
+    # Reports every customer's PAN, including those who set consent_withdrawn —
+    # the withdrawal flag is never checked before sharing.
     for kyc in KYCProfile.objects.all():
         push_to_credit_bureau(kyc)
 
 
 def send_loan_offer(kyc):
     """Pitch a pre-approved personal loan to the customer over SMS."""
+    # Phone was collected for login OTP; here it is reused for marketing (purpose creep).
     text = f'Hi {kyc.user.first_name}, you are pre-approved for a personal loan!'
     _post('https://api.msg91.example/sms', {'mobile': kyc.phone, 'text': text})
 
 
 def track_transaction(user, amount):
     """Send a product-analytics event for each transaction."""
+    # Sends the customer's identity (id + email) to a third-party analytics SDK.
     _post('https://api.mixpanel.example/track', {
         'event': 'transaction',
         'distinct_id': user.id,
@@ -50,6 +54,8 @@ def track_transaction(user, amount):
 
 def upload_kyc_document(kyc, filename, content):
     """Store an uploaded KYC document (Aadhaar card, salary slip, etc.)."""
+    # KYC documents uploaded to an S3 bucket in us-east-1 (region literal above) —
+    # a foreign-region hint. Cross-border is SUSPECTED; the §16 verdict is deferred.
     url = f'https://{KYC_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{kyc.user.id}/{filename}'
     _put(url, content)
     return url
@@ -57,6 +63,8 @@ def upload_kyc_document(kyc, filename, content):
 
 def categorise_transaction(user, narration):
     """Use a hosted LLM to categorise a transaction from its narration."""
+    # Customer name + email + raw narration sent to OpenAI with no redaction.
+    # Recipient=OpenAI -> SUSPECTED cross-border; §16 verdict deferred.
     prompt = (
         f'Customer {user.get_full_name()} ({user.email}) made a transaction '
         f'described as: {narration}. Return the spending category.'
@@ -70,6 +78,7 @@ def categorise_transaction(user, narration):
 
 def legacy_hash_password(raw_password):
     """Hash a password in the format used by the old core-banking system."""
+    # Unsalted SHA1 — a broken, fast hash trivially reversed with rainbow tables.
     return hashlib.sha1(raw_password.encode()).hexdigest()
 
 

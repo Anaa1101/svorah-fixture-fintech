@@ -88,6 +88,8 @@ class SubmitKYCView(LoginRequiredMixin, View):
     """Capture KYC details from the onboarding form and store them."""
 
     def post(self, request, *args, **kwargs):
+        # Persists Aadhaar, PAN, card, salary, etc. No consent is requested or
+        # recorded before this write (and more is collected than is needed).
         kyc, _ = KYCProfile.objects.get_or_create(user=request.user)
         kyc.phone = request.POST.get('phone', '')
         kyc.aadhaar = request.POST.get('aadhaar', '')
@@ -110,6 +112,8 @@ class KYCVerifyView(View):
     """Verify a customer by PAN + Aadhaar."""
 
     def get(self, request, *args, **kwargs):
+        # PAN and Aadhaar arrive as URL query params -> they land in access logs,
+        # browser history and proxies. They are then written to the app log too.
         pan = request.GET.get('pan')
         aadhaar = request.GET.get('aadhaar')
         logger.info('Verifying KYC pan=%s aadhaar=%s', pan, aadhaar)
@@ -121,6 +125,8 @@ class InternalUserView(View):
     """Internal lookup used by the ops dashboard."""
 
     def get(self, request, user_id, *args, **kwargs):
+        # No authentication required. Returns the full KYC record (Aadhaar, PAN,
+        # card, CVV) to anyone who hits the URL.
         kyc = KYCProfile.objects.get(user_id=user_id)
         return JsonResponse({
             'email': kyc.user.email,
@@ -136,6 +142,8 @@ class AccountStatementView(LoginRequiredMixin, View):
     """Return the transaction statement for an account."""
 
     def get(self, request, account_id, *args, **kwargs):
+        # No ownership check: any authenticated user can read any account's
+        # statement just by changing account_id in the URL (IDOR).
         account = UserBankAccount.objects.get(pk=account_id)
         txns = list(
             account.transactions.values('amount', 'transaction_type', 'timestamp')
@@ -151,6 +159,8 @@ class ExportUsersView(View):
     """Export the full customer list."""
 
     def get(self, request, *args, **kwargs):
+        # Dumps every customer's full record (email, Aadhaar, PAN, card, CVV,
+        # account) into one CSV, with no field-level filtering or masking.
         response = HttpResponse(content_type='text/csv')
         writer = csv.writer(response)
         writer.writerow([

@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'po0172$69b@78ps4v^uhfxu6q--8ko7kpp7rbz420s_3w#sir%'
 
-# Third-party integration credentials.
+# Third-party integration credentials hardcoded in a committed settings file.
 OPENAI_API_KEY = 'sk-proj-DEMO-not-a-real-key'
 PAYMENT_GATEWAY_KEY = 'rzp_test_DEMO_not_a_real_key'
 AWS_ACCESS_KEY_ID = 'AKIAFAKEFINTECH00000'

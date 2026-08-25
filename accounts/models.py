@@ -130,20 +130,26 @@ class KYCProfile(models.Model):
         User, related_name='kyc', on_delete=models.CASCADE
     )
     phone = models.CharField(max_length=15, blank=True)
+    # Aadhaar and PAN stored in full, unmasked plaintext (no encryption at rest).
     aadhaar = models.CharField(max_length=14, blank=True)
     pan = models.CharField(max_length=10, blank=True)
+    # Full bank account number stored plaintext.
     bank_account_number = models.CharField(max_length=20, blank=True)
     ifsc = models.CharField(max_length=11, blank=True)
     upi = models.CharField(max_length=64, blank=True)
+    # Full card number AND CVV stored — a CVV must never be persisted.
     card_number = models.CharField(max_length=19, blank=True)
     cvv = models.CharField(max_length=4, blank=True)
+    # Income / salary slip collected at signup though not needed to open an account.
     annual_income = models.PositiveIntegerField(null=True, blank=True)
     salary_slip = models.CharField(max_length=256, blank=True)
     credit_score = models.PositiveSmallIntegerField(null=True, blank=True)
-    # onboarding defaults
+    # Marketing opt-in and partner-sharing default to True for every customer.
     marketing_consent = models.BooleanField(default=True)
     share_with_partners = models.BooleanField(default=True)
+    # Set when a customer asks to stop being contacted / shared.
     consent_withdrawn = models.BooleanField(default=False)
+    # Soft-delete marker; deactivating keeps the row and all PII forever.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
